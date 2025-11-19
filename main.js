@@ -14,6 +14,7 @@ let radii = [];
 let isPaused = false;
 let animationId;
 let simulationStarted = false;
+let angryResetInterval = null;
 
 // Emotion state
 let currentEmotion = { emotion: 'calm', intensity: 0.5 };
@@ -41,7 +42,7 @@ function setup() {
     setParameters();
 
     // Set default emotion to calm
-    updateParticleEmotion('anxious', 1.0);
+    updateParticleEmotion('neutral', 1.0);
 
     // Event listeners
     document.getElementById('randomize').addEventListener('click', setParameters);
@@ -154,6 +155,12 @@ function toggleFullscreen() {
 function updateParticleEmotion(emotion, intensity) {
     currentEmotion = { emotion, intensity };
     
+    // Clear any existing angry reset interval
+    if (angryResetInterval) {
+        clearInterval(angryResetInterval);
+        angryResetInterval = null;
+    }
+    
     // Emotion color palettes - each emotion has multiple nuanced colors
     const emotionPalettes = {
         'happy': [
@@ -196,21 +203,13 @@ function updateParticleEmotion(emotion, intensity) {
             '#ff772eff',  // Light burnt orange
             '#ff9900ff'   // Dark ruby
         ],
-        'anxious': [
+        'neutral': [
             '#B300FF',  // Pure vibrant purple
             '#4D0D73',  // Very dark indigo
             '#E680FF',  // Light magenta
             '#7300CC',  // Deep violet
             '#F2C2FF',  // Pale pink-purple
             '#8C1ACC'   // Medium purple
-        ],
-        'neutral': [
-            '#CCCCCC',  // Very light gray
-            '#4D4D4D',  // Very dark gray
-            '#999999',  // Medium-light gray
-            '#666666',  // Medium-dark gray
-            '#B3B3B3',  // Light gray
-            '#808080'   // True middle gray
         ]
     };
     
@@ -223,26 +222,31 @@ function updateParticleEmotion(emotion, intensity) {
     // Emotion behavior mappings
     switch(emotion) {
         case 'happy':
-            emotionForceModifier = 1.0 + (intensity * 0.3); // More attraction
+            emotionForceModifier = 2.0 + (intensity * 0.3); // More attraction
             emotionFrictionModifier = 0.9 - (intensity * 0.1); // More movement
             break;
         case 'excited':
-            emotionForceModifier = 1.2 + (intensity * 0.5); // Strong forces
+            emotionForceModifier = 3.5 + (intensity * 0.5); // Strong forces
             emotionFrictionModifier = 0.7 - (intensity * 0.15); // Very energetic
             break;
         case 'sad':
-            emotionForceModifier = 0.8 - (intensity * 0.3); // Weaker forces
+            emotionForceModifier = 0.7 - (intensity * 0.3); // Weaker forces
             emotionFrictionModifier = 0.95 + (intensity * 0.04); // Slower movement
             break;
         case 'calm':
-            emotionForceModifier = 0.9; // Gentle forces
+            emotionForceModifier = 0.85; // Gentle forces
             emotionFrictionModifier = 0.92; // Slow, smooth
             break;
         case 'angry':
-            emotionForceModifier = 1.5 + (intensity * 0.5); // Aggressive forces
-            emotionFrictionModifier = 0.75 - (intensity * 0.1); // Chaotic movement
+            emotionForceModifier = 3.5 + (intensity * 0.5); // Aggressive forces
+            emotionFrictionModifier = 0.75 - (intensity * 0.1); // Very fast, chaotic movement
+            // Reset parameters every 2 seconds when angry
+            angryResetInterval = setInterval(() => {
+                setParameters();
+                console.log('😡 Angry mode: Parameters reset!');
+            }, 2000);
             break;
-        case 'anxious':
+        case 'neutral':
             emotionForceModifier = 1.0 + (intensity * 0.4 * Math.sin(Date.now() / 200)); // Fluctuating
             emotionFrictionModifier = 0.85 - (intensity * 0.1); // Jittery
             break;

@@ -291,7 +291,7 @@ async function sendMessage() {
 async function analyzeEmotionAndUpdateParticles(responseText) {
     try {
         const emotionPrompt = `Analyze the emotional tone of this message and respond with ONLY a JSON object (no markdown, no extra text) in this exact format:
-{"emotion": "happy/sad/angry/excited/calm/anxious/neutral", "intensity": 0.0-1.0}
+{"emotion": "happy/sad/angry/excited/calm/neutral", "intensity": 0.0-1.0}
 
 Message: "${responseText}"
 
