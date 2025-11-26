@@ -1,6 +1,7 @@
 // Global state
 let conversationData = [];
 let apiKey = '';
+let gladiaApiKey = '';
 let chatHistory = [];
 const PERSON_NAME = 'Angélique';
 let botName = '';
@@ -10,13 +11,22 @@ const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
 const uploadBtn = document.getElementById('uploadBtn');
 const apiKeyInput = document.getElementById('apiKey');
+const gladiaApiKeyInput = document.getElementById('gladiaApiKey');
 const analyzeBtn = document.getElementById('analyzeBtn');
 const statusContent = document.getElementById('statusContent');
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
+const voiceBtn = document.getElementById('voiceBtn');
 const clearBtn = document.getElementById('clearBtn');
 const chatStatus = document.getElementById('chatStatus');
+const recordingIndicator = document.getElementById('recordingIndicator');
+
+// Voice recording state
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let recognition = null;
 
 // Event Listeners
 uploadBtn.addEventListener('click', () => fileInput.click());
@@ -27,9 +37,15 @@ uploadArea.addEventListener('dragleave', handleDragLeave);
 uploadArea.addEventListener('drop', handleDrop);
 analyzeBtn.addEventListener('click', analyzePersonality);
 sendBtn.addEventListener('click', sendMessage);
+voiceBtn.addEventListener('click', toggleVoiceRecording);
 clearBtn.addEventListener('click', clearChat);
 apiKeyInput.addEventListener('input', () => {
     apiKey = apiKeyInput.value.trim();
+    updateUI();
+});
+
+gladiaApiKeyInput.addEventListener('input', () => {
+    gladiaApiKey = gladiaApiKeyInput.value.trim();
     updateUI();
 });
 
@@ -37,6 +53,19 @@ chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
+    }
+});
+
+// Global keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    const isTyping = e.target.tagName === 'INPUT' || 
+                    e.target.tagName === 'TEXTAREA' || 
+                    e.target.isContentEditable;
+    
+    // V key for voice recording (works globally unless typing)
+    if (e.key.toLowerCase() === 'v' && !isTyping) {
+        e.preventDefault();
+        toggleVoiceRecording();
     }
 });
 
@@ -154,11 +183,13 @@ function updateUI() {
     if (chatHistory.length > 0 && botName) {
         chatInput.disabled = false;
         sendBtn.disabled = false;
+        voiceBtn.disabled = false;
         chatStatus.textContent = `Chatting with ${botName}`;
         chatStatus.classList.add('ready');
     } else {
         chatInput.disabled = true;
         sendBtn.disabled = true;
+        voiceBtn.disabled = true;
         chatStatus.textContent = 'Not Ready';
         chatStatus.classList.remove('ready');
     }
@@ -401,6 +432,311 @@ function clearChat() {
     // Keep system prompt but clear conversation
     if (chatHistory.length > 2) {
         chatHistory = chatHistory.slice(0, 2);
+    }
+}
+
+// Voice Recording Functions
+async function toggleVoiceRecording() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        await startRecording();
+    }
+}
+
+async function startRecording() {
+    try {
+        // Use Web Speech API for better compatibility
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            addSystemMessage('❌ Speech recognition not supported in this browser. Try Chrome or Edge.');
+            return;
+        }
+        
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US'; // Change this for other languages
+        
+        recognition.onstart = () => {
+            isRecording = true;
+            voiceBtn.classList.add('recording');
+            recordingIndicator.style.display = 'flex';
+            console.log('🎤 Recording started...');
+        };
+        
+        recognition.onresult = async (event) => {
+            const transcription = event.results[0][0].transcript;
+            console.log('📝 Transcription:', transcription);
+            
+            await processTranscription(transcription);
+        };
+        
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            addSystemMessage(`❌ Error: ${event.error}`);
+            stopRecording();
+        };
+        
+        recognition.onend = () => {
+            stopRecording();
+        };
+        
+        recognition.start();
+        
+    } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        addSystemMessage('❌ Error: Could not start voice recognition. Please check permissions.');
+    }
+}
+
+function stopRecording() {
+    if (recognition && isRecording) {
+        recognition.stop();
+    }
+    
+    isRecording = false;
+    voiceBtn.classList.remove('recording');
+    recordingIndicator.style.display = 'none';
+    
+    console.log('🎤 Recording stopped');
+}
+
+async function processTranscription(transcription) {
+    try {
+        // Show transcribed message in chat
+        addMessage('You (voice)', transcription, 'user');
+        
+        // Now get bot response using the transcription with chat history
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        
+        // Add transcription to chat history for context
+        chatHistory.push({
+            role: 'user',
+            parts: [{ text: transcription }]
+        });
+        
+        // Create a new contents array with history + audio input
+        const contents = chatHistory;
+        
+        const requestBody = {
+            contents: contents,
+            generationConfig: {
+                temperature: 0.9,
+                maxOutputTokens: 1024,
+            }
+        };
+        
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || 'Audio processing failed');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.candidates || data.candidates.length === 0) {
+            throw new Error('No response from API');
+        }
+        
+        const responseText = data.candidates[0].content.parts[0].text;
+        
+        // Add bot response
+        addMessage(botName, responseText, 'bot');
+        
+        // Add bot response to chat history
+        chatHistory.push({
+            role: 'model',
+            parts: [{ text: responseText }]
+        });
+        
+        // Analyze emotion and update particles
+        await analyzeEmotionAndUpdateParticles(responseText);
+        
+        console.log('✅ Audio processed successfully');
+        
+    } catch (error) {
+        console.error('Error processing audio:', error);
+        addSystemMessage(`❌ Error processing audio: ${error.message}`);
+    }
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function transcribeWithGladia(audioBlob) {
+    try {
+        const GLADIA_API_KEY = gladiaApiKey;
+        
+        if (!GLADIA_API_KEY) {
+            throw new Error('Gladia API key is required');
+        }
+        
+        // Convert webm to WAV for better compatibility
+        const wavBlob = await convertToWav(audioBlob);
+        
+        // Create FormData with the audio file
+        const formData = new FormData();
+        formData.append('audio', wavBlob, 'recording.wav');
+        formData.append('language_behaviour', 'automatic single language');
+        
+        // Use Gladia's transcription endpoint
+        const response = await fetch('https://api.gladia.io/v2/transcription/', {
+            method: 'POST',
+            headers: {
+                'x-gladia-key': GLADIA_API_KEY
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Gladia API error:', errorData);
+            throw new Error(`Gladia API error: ${errorData.message || response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Gladia response:', data);
+        
+        // Check if we got a result_url (async processing)
+        if (data.result_url) {
+            // Poll for the result
+            const resultUrl = data.result_url;
+            let attempts = 0;
+            const maxAttempts = 30;
+            
+            while (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const resultResponse = await fetch(resultUrl, {
+                    headers: {
+                        'x-gladia-key': GLADIA_API_KEY
+                    }
+                });
+                
+                if (resultResponse.ok) {
+                    const result = await resultResponse.json();
+                    console.log('Gladia result:', result);
+                    
+                    if (result.status === 'done') {
+                        const transcription = result.result?.transcription?.full_transcript || 
+                                            result.result?.transcription?.success ||
+                                            '[Could not transcribe]';
+                        return transcription;
+                    } else if (result.status === 'error') {
+                        throw new Error('Transcription failed');
+                    }
+                }
+                
+                attempts++;
+            }
+            
+            throw new Error('Transcription timeout');
+        }
+        
+        // If we got immediate results
+        const transcription = data.prediction?.[0]?.transcription || 
+                            data.transcription?.full_transcript ||
+                            data.transcription?.text ||
+                            data.result?.transcription?.full_transcript ||
+                            '[Could not transcribe]';
+        
+        return transcription;
+        
+    } catch (error) {
+        console.error('Gladia transcription error:', error);
+        return '[Transcription failed: ' + error.message + ']';
+    }
+}
+
+async function convertToWav(blob) {
+    return new Promise((resolve, reject) => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const fileReader = new FileReader();
+        
+        fileReader.onload = async function(e) {
+            try {
+                const audioBuffer = await audioContext.decodeAudioData(e.target.result);
+                
+                // Convert to WAV
+                const wavBuffer = audioBufferToWav(audioBuffer);
+                const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+                
+                resolve(wavBlob);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        
+        fileReader.onerror = reject;
+        fileReader.readAsArrayBuffer(blob);
+    });
+}
+
+function audioBufferToWav(buffer) {
+    const length = buffer.length * buffer.numberOfChannels * 2 + 44;
+    const arrayBuffer = new ArrayBuffer(length);
+    const view = new DataView(arrayBuffer);
+    const channels = [];
+    let offset = 0;
+    let pos = 0;
+    
+    // Write WAV header
+    setUint32(0x46464952); // "RIFF"
+    setUint32(length - 8); // file length - 8
+    setUint32(0x45564157); // "WAVE"
+    
+    setUint32(0x20746d66); // "fmt " chunk
+    setUint32(16); // length = 16
+    setUint16(1); // PCM (uncompressed)
+    setUint16(buffer.numberOfChannels);
+    setUint32(buffer.sampleRate);
+    setUint32(buffer.sampleRate * 2 * buffer.numberOfChannels); // avg. bytes/sec
+    setUint16(buffer.numberOfChannels * 2); // block-align
+    setUint16(16); // 16-bit
+    
+    setUint32(0x61746164); // "data" - chunk
+    setUint32(length - pos - 4); // chunk length
+    
+    // Write interleaved data
+    for (let i = 0; i < buffer.numberOfChannels; i++) {
+        channels.push(buffer.getChannelData(i));
+    }
+    
+    while (pos < length) {
+        for (let i = 0; i < buffer.numberOfChannels; i++) {
+            let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+            sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+            view.setInt16(pos, sample, true);
+            pos += 2;
+        }
+        offset++;
+    }
+    
+    return arrayBuffer;
+    
+    function setUint16(data) {
+        view.setUint16(pos, data, true);
+        pos += 2;
+    }
+    
+    function setUint32(data) {
+        view.setUint32(pos, data, true);
+        pos += 4;
     }
 }
 
