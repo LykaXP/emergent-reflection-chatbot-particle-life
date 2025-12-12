@@ -213,7 +213,7 @@ async function analyzePersonality() {
 Example messages:
 ${personMessages.slice(0, 10).map((msg, i) => `${i + 1}. "${msg}"`).join('\n')}`;
 
-        const nameResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        const nameResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -328,7 +328,7 @@ Message: "${responseText}"
 
 Respond with only the JSON object, nothing else.`;
 
-        const emotionResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        const emotionResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -359,7 +359,7 @@ Respond with only the JSON object, nothing else.`;
 }
 
 async function callGeminiAPI(message) {
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const requestBody = {
         contents: chatHistory,
@@ -509,7 +509,7 @@ async function processTranscription(transcription) {
         addMessage('You (voice)', transcription, 'user');
         
         // Now get bot response using the transcription with chat history
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         
         // Add transcription to chat history for context
         chatHistory.push({
