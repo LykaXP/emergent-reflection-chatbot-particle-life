@@ -223,8 +223,27 @@ async function sendBotInitiatedMessage() {
     if (!apiKey || chatHistory.length < 2) return;
     
     try {
-        // Create a prompt for the bot to initiate conversation
-        const initiativePrompt = "Start a new conversation topic or share a thought. Be natural and spontaneous, like you just thought of something interesting to say.";
+        // Randomly decide whether to comment on particle simulation (40% chance)
+        const shouldCommentOnParticles = Math.random() < 0.4;
+        
+        let initiativePrompt;
+        
+        if (shouldCommentOnParticles) {
+            // Get current particle state if available
+            let particleContext = '';
+            
+            // Try to get the current emotion state from particle simulation
+            if (typeof window.currentParticleEmotion !== 'undefined' && window.currentParticleEmotion) {
+                particleContext = `The particle simulation is currently showing a "${window.currentParticleEmotion}" emotion with intensity ${window.currentParticleIntensity || 0.5}.`;
+            } else {
+                particleContext = 'The particle simulation is running with colorful particles moving around.';
+            }
+            
+            initiativePrompt = `${particleContext} Comment on what you see in the particle simulation or relate it to how you're feeling. Be creative and natural, like you're genuinely observing and reacting to the visual display.`;
+        } else {
+            // Regular conversation starter
+            initiativePrompt = "Start a new conversation topic or share a thought. Be natural and spontaneous, like you just thought of something interesting to say.";
+        }
         
         // Add to chat history temporarily
         const tempHistory = [...chatHistory, {
@@ -521,6 +540,9 @@ JSON response:`;
         // Update particle simulation with detected emotion
         if (typeof updateParticleEmotion === 'function') {
             updateParticleEmotion(detectedEmotion, intensity);
+            // Store current emotion state globally for bot to reference
+            window.currentParticleEmotion = detectedEmotion;
+            window.currentParticleIntensity = intensity;
         }
         
         console.log('Emotion detected:', detectedEmotion, intensity);
