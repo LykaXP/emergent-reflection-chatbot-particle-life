@@ -291,9 +291,10 @@ async function sendBotInitiatedMessage() {
         }
         
         // Add to chat history temporarily
+        const languageInstruction = getLanguageInstruction();
         const tempHistory = [...chatHistory, {
             role: 'user',
-            parts: [{ text: initiativePrompt }]
+            parts: [{ text: languageInstruction + initiativePrompt }]
         }];
         
         // Call Gemini API
@@ -454,10 +455,13 @@ async function sendMessage() {
     chatInput.disabled = true;
     sendBtn.disabled = true;
 
-    // Add to chat history
+    // Get language instruction
+    const languageInstruction = getLanguageInstruction();
+    
+    // Add to chat history with language instruction
     chatHistory.push({
         role: 'user',
-        parts: [{ text: message }]
+        parts: [{ text: languageInstruction + message }]
     });
 
     try {
@@ -673,6 +677,16 @@ function addSystemMessage(content) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+function getLanguageInstruction() {
+    const languageMap = {
+        'en-US': '',
+        'fr-FR': '[Respond in French] ',
+        'zh-TW': '[Respond in Traditional Chinese] ',
+        'ja-JP': '[Respond in Japanese] '
+    };
+    return languageMap[currentLanguage] || '';
+}
+
 function clearChat() {
     chatMessages.innerHTML = '<div class="welcome-message"><p>Chat cleared. Continue the conversation!</p></div>';
     
@@ -779,9 +793,10 @@ async function processTranscription(transcription) {
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         
         // Add transcription to chat history for context
+        const languageInstruction = getLanguageInstruction();
         chatHistory.push({
             role: 'user',
-            parts: [{ text: transcription }]
+            parts: [{ text: languageInstruction + transcription }]
         });
         
         // Create a new contents array with history + audio input
