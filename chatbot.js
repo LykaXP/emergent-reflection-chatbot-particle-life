@@ -35,7 +35,7 @@ let currentLanguage = 'en-US';
 const languages = [
     { code: 'en-US', name: 'English', short: 'EN' },
     { code: 'fr-FR', name: 'French', short: 'FR' },
-    { code: 'zh-CN', name: 'Chinese', short: 'ZH' },
+    { code: 'zh-TW', name: 'Traditional Chinese', short: 'ZH' },
     { code: 'ja-JP', name: 'Japanese', short: 'JA' },
 ];
 
