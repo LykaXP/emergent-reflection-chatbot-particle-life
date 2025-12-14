@@ -44,7 +44,19 @@ function setup() {
             </div>
             <div class="chat-input-container">
                 <textarea class="fs-chat-input" id="fsChatInput" placeholder="Type your message..." rows="2" disabled></textarea>
+                <button id="fsVoiceBtn" class="voice-btn" disabled title="Voice input (V)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
                 <button id="fsSendBtn" disabled>Send</button>
+            </div>
+            <div id="fsRecordingIndicator" class="recording-indicator" style="display: none;">
+                <span class="recording-dot"></span>
+                <span>Recording... (Press V or click to stop)</span>
             </div>
         `;
         
@@ -85,6 +97,7 @@ function setup() {
     const fullscreenChatOverlay = document.getElementById('fullscreenChatOverlay');
     const fsChatInput = document.getElementById('fsChatInput');
     const fsSendBtn = document.getElementById('fsSendBtn');
+    const fsVoiceBtn = document.getElementById('fsVoiceBtn');
     
     fsSendBtn.addEventListener('click', () => sendFullscreenMessage());
     fsChatInput.addEventListener('keypress', (e) => {
@@ -93,6 +106,16 @@ function setup() {
             sendFullscreenMessage();
         }
     });
+    
+    // Voice button handler - delegates to main voice button
+    if (fsVoiceBtn) {
+        fsVoiceBtn.addEventListener('click', () => {
+            const mainVoiceBtn = document.getElementById('voiceBtn');
+            if (mainVoiceBtn && !mainVoiceBtn.disabled) {
+                mainVoiceBtn.click();
+            }
+        });
+    }
     
     // Sync chat status
     syncFullscreenChatStatus();
@@ -234,6 +257,7 @@ function syncFullscreenChatStatus() {
     const mainInput = document.getElementById('chatInput');
     const fsInput = document.getElementById('fsChatInput');
     const fsSendBtn = document.getElementById('fsSendBtn');
+    const fsVoiceBtn = document.getElementById('fsVoiceBtn');
     
     if (mainStatus) {
         // Create observer to watch for status changes
@@ -244,6 +268,9 @@ function syncFullscreenChatStatus() {
             }
             if (fsSendBtn && document.getElementById('sendBtn')) {
                 fsSendBtn.disabled = document.getElementById('sendBtn').disabled;
+            }
+            if (fsVoiceBtn && document.getElementById('voiceBtn')) {
+                fsVoiceBtn.disabled = document.getElementById('voiceBtn').disabled;
             }
         });
         
@@ -260,6 +287,46 @@ function syncFullscreenChatStatus() {
         }
         if (fsSendBtn && document.getElementById('sendBtn')) {
             fsSendBtn.disabled = document.getElementById('sendBtn').disabled;
+        }
+        if (fsVoiceBtn && document.getElementById('voiceBtn')) {
+            fsVoiceBtn.disabled = document.getElementById('voiceBtn').disabled;
+        }
+    }
+    
+    // Also sync the voice button recording state
+    const mainVoiceBtn = document.getElementById('voiceBtn');
+    if (mainVoiceBtn && fsVoiceBtn) {
+        const voiceObserver = new MutationObserver(() => {
+            if (mainVoiceBtn.classList.contains('recording')) {
+                fsVoiceBtn.classList.add('recording');
+            } else {
+                fsVoiceBtn.classList.remove('recording');
+            }
+            syncRecordingIndicator();
+        });
+        
+        voiceObserver.observe(mainVoiceBtn, { 
+            attributes: true,
+            attributeFilter: ['class']
+        });
+        
+        // Initial state
+        if (mainVoiceBtn.classList.contains('recording')) {
+            fsVoiceBtn.classList.add('recording');
+        }
+    }
+}
+
+function syncRecordingIndicator() {
+    const mainIndicator = document.getElementById('recordingIndicator');
+    const fsIndicator = document.getElementById('fsRecordingIndicator');
+    
+    if (mainIndicator && fsIndicator) {
+        // Sync display state
+        if (mainIndicator.style.display !== 'none') {
+            fsIndicator.style.display = 'flex';
+        } else {
+            fsIndicator.style.display = 'none';
         }
     }
 }

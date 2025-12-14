@@ -635,6 +635,19 @@ button:disabled {
     background: rgba(40, 167, 69, 0.9);
 }
 
+.fullscreen-chat-overlay .voice-btn.recording {
+    background: rgba(220, 53, 69, 0.9);
+    animation: pulse 1.5s infinite;
+}
+
+.fullscreen-chat-overlay .recording-indicator {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
 .fullscreen-chat-overlay .lang-btn {
     background: rgba(108, 117, 125, 0.7);
 }

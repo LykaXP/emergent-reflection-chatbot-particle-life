@@ -29,6 +29,7 @@ let isRecording = false;
 let recognition = null;
 let currentLanguage = 'en-US';
 let botInitiativeTimer = null;
+let speechRecognitionInitialized = false;
 
 // Supported languages
 const languages = [
@@ -193,6 +194,11 @@ function updateUI() {
         if (langBtn) langBtn.disabled = false;
         chatStatus.textContent = `Chatting with ${botName}`;
         chatStatus.classList.add('ready');
+        
+        // Pre-initialize speech recognition for fullscreen use
+        if (!speechRecognitionInitialized) {
+            initializeSpeechRecognition();
+        }
     } else {
         chatInput.disabled = true;
         sendBtn.disabled = true;
@@ -200,6 +206,31 @@ function updateUI() {
         if (langBtn) langBtn.disabled = true;
         chatStatus.textContent = 'Not Ready';
         chatStatus.classList.remove('ready');
+    }
+}
+
+// Pre-initialize speech recognition to avoid permission issues in fullscreen
+function initializeSpeechRecognition() {
+    try {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            console.log('Speech recognition not supported');
+            return;
+        }
+        
+        // Create recognition object but don't start it
+        if (!recognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = currentLanguage;
+            
+            console.log('✅ Speech recognition initialized for fullscreen use');
+            speechRecognitionInitialized = true;
+        }
+    } catch (error) {
+        console.error('Error initializing speech recognition:', error);
     }
 }
 
@@ -793,15 +824,27 @@ async function startRecording() {
             return;
         }
         
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
+        // Initialize or reuse recognition object
+        if (!recognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+        }
+        
+        // Update language
         recognition.lang = currentLanguage;
         
         recognition.onstart = () => {
             isRecording = true;
             voiceBtn.classList.add('recording');
             recordingIndicator.style.display = 'flex';
+            
+            // Sync to fullscreen if in fullscreen
+            const fsVoiceBtn = document.getElementById('fsVoiceBtn');
+            const fsIndicator = document.getElementById('fsRecordingIndicator');
+            if (fsVoiceBtn) fsVoiceBtn.classList.add('recording');
+            if (fsIndicator) fsIndicator.style.display = 'flex';
+            
             console.log('🎤 Recording started...');
         };
         
@@ -838,6 +881,12 @@ function stopRecording() {
     isRecording = false;
     voiceBtn.classList.remove('recording');
     recordingIndicator.style.display = 'none';
+    
+    // Sync to fullscreen if in fullscreen
+    const fsVoiceBtn = document.getElementById('fsVoiceBtn');
+    const fsIndicator = document.getElementById('fsRecordingIndicator');
+    if (fsVoiceBtn) fsVoiceBtn.classList.remove('recording');
+    if (fsIndicator) fsIndicator.style.display = 'none';
     
     console.log('🎤 Recording stopped');
 }
