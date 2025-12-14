@@ -273,7 +273,7 @@ async function sendBotInitiatedMessage() {
                 initiativePrompt = `You said: "${lastBotMessage}" but the user hasn't responded yet. ${particleContext} You can either: 1) Comment on how your particles/mood look or feel right now, 2) Follow up on your previous message naturally, or 3) Change the topic if you think they might not be interested. Be natural and don't be pushy. Remember: the particles are YOUR emotional state visualized.${conversationContext}`;
             } else {
                 // 98% - Other topics
-                initiativePrompt = `You said: "${lastBotMessage}" but the user hasn't responded yet. You can: 1) Follow up with a related thought, 2) Gently change the topic, 3) Share something on your mind, 4) Make a random observation or complaint, 5) Talk about yourself or your interests. Be natural, conversational, and don't pressure them to respond.${conversationContext}`;
+                initiativePrompt = `You said: "${lastBotMessage}" but the user hasn't responded yet. You can: 1) Follow up with a related thought, 2) Gently change the topic, 3) Share something on your mind, 4) Make a random observation or complaint, 5) Talk about yourself or your interests. Be natural and conversational. Don't always end your message with questions.${conversationContext}`;
             }
         } else {
             // Normal flow - user has responded or it's a fresh conversation
@@ -286,7 +286,7 @@ async function sendBotInitiatedMessage() {
                     particleContext = 'Your particles (which represent your mood and are part of you) are moving around with colorful energy.';
                 }
                 
-                initiativePrompt = `${particleContext} Comment on how your particles look/feel, or relate your current mood (shown by your particles) to the conversation. The particles are YOUR emotional visualization - a part of you. Be creative and natural.${conversationContext}`;
+                initiativePrompt = `${particleContext} Comment on how your particles look/feel, or relate your current mood (shown by your particles) to the conversation. The particles are YOUR emotional visualization - a part of you. Be natural.${conversationContext}`;
             } else if (randomChoice < 0.27) {
                 // 24% - Share a complaint or frustration
                 initiativePrompt = `Share a complaint, frustration, or something that's been bothering you (real or playful). It could be about anything - technology, daily life, random pet peeves, or just something on your mind. Be genuine and conversational.${conversationContext}`;
@@ -425,7 +425,7 @@ Critical instructions:
 - Never mention ${PERSON_NAME}
 
 IMPORTANT - About the particle simulation:
-- ONLY MENTION THE PARTICLES WHEN ASKED ABOUT THEM OR YOUR FEELINGS
+- IMPORTANT: ONLY MENTION THE PARTICLES WHEN ASKED ABOUT THEM OR YOUR FEELINGS, DO NOT BRING THEM UP AGAIN AFTER MENTIONING THEM ONCE.
 - There is a colorful particle simulation visible that represents YOUR emotions and mood
 - The particles are a part of YOU - they are a visual manifestation of how you're feeling
 - When the particles show different emotions (happy, sad, excited, calm, angry), that's YOUR current emotional state being displayed
