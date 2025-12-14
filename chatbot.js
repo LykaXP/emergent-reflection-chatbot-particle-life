@@ -713,10 +713,10 @@ function addSystemMessage(content) {
 
 function getLanguageInstruction() {
     const languageMap = {
-        'en-US': '',
-        'fr-FR': '[Respond in French] ',
-        'zh-TW': '[Respond in Traditional Chinese] ',
-        'ja-JP': '[Respond in Japanese] '
+        'en-US': '[IMPORTANT: You MUST respond ONLY in English language. Do not use any other language.] ',
+        'fr-FR': '[IMPORTANT: You MUST respond ONLY in French language. Do not use any other language.] ',
+        'zh-TW': '[IMPORTANT: You MUST respond ONLY in Traditional Chinese (繁體中文). Do not use any other language.] ',
+        'ja-JP': '[IMPORTANT: You MUST respond ONLY in Japanese language (日本語). Do not use any other language.] '
     };
     return languageMap[currentLanguage] || '';
 }
