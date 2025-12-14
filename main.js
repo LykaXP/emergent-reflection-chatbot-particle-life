@@ -32,22 +32,11 @@ function setup() {
     // Create fullscreen chat elements and append to wrapper
     const wrapper = document.getElementById('fullscreenWrapper');
     if (wrapper) {
-        // Create toggle button
-        const toggle = document.createElement('button');
-        toggle.id = 'fullscreenChatToggle';
-        toggle.className = 'fullscreen-chat-toggle';
-        toggle.title = 'Toggle Chat (C)';
-        toggle.textContent = '💬';
-        
-        // Create overlay
+        // Create overlay (always visible in fullscreen)
         const overlay = document.createElement('div');
         overlay.id = 'fullscreenChatOverlay';
         overlay.className = 'fullscreen-chat-overlay';
         overlay.innerHTML = `
-            <div class="chat-header">
-                <h2>Chat</h2>
-                <div class="chat-status" id="fsChatStatus">Not Ready</div>
-            </div>
             <div class="chat-messages" id="fsChatMessages">
                 <div class="welcome-message">
                     <p>💬 Chat in fullscreen mode!</p>
@@ -59,7 +48,6 @@ function setup() {
             </div>
         `;
         
-        wrapper.appendChild(toggle);
         wrapper.appendChild(overlay);
     }
 
@@ -84,12 +72,10 @@ function setup() {
     document.getElementById('fullscreen').addEventListener('click', toggleFullscreen);
     
     // Fullscreen chat handlers
-    const fullscreenChatToggle = document.getElementById('fullscreenChatToggle');
     const fullscreenChatOverlay = document.getElementById('fullscreenChatOverlay');
     const fsChatInput = document.getElementById('fsChatInput');
     const fsSendBtn = document.getElementById('fsSendBtn');
     
-    fullscreenChatToggle.addEventListener('click', toggleFullscreenChat);
     fsSendBtn.addEventListener('click', () => sendFullscreenMessage());
     fsChatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -119,9 +105,6 @@ function setup() {
         } else if (e.key.toLowerCase() === 'f') {
             e.preventDefault();
             toggleFullscreen();
-        } else if (e.key.toLowerCase() === 'c' && document.fullscreenElement) {
-            e.preventDefault();
-            toggleFullscreenChat();
         }
     });
 }
@@ -212,7 +195,6 @@ function toggleFullscreen() {
 // Listen for fullscreen changes
 document.addEventListener('fullscreenchange', () => {
     const overlay = document.getElementById('fullscreenChatOverlay');
-    const toggle = document.getElementById('fullscreenChatToggle');
     
     if (document.fullscreenElement) {
         // Entered fullscreen - show chat overlay
@@ -221,46 +203,25 @@ document.addEventListener('fullscreenchange', () => {
             overlay.classList.add('visible');
             syncChatMessages();
         }
-        if (toggle) {
-            toggle.classList.add('active');
-        }
     } else {
         // Exited fullscreen - hide chat overlay
         console.log('Exited fullscreen mode');
         if (overlay) overlay.classList.remove('visible');
-        if (toggle) toggle.classList.remove('active');
     }
 });
 
-function toggleFullscreenChat() {
-    const overlay = document.getElementById('fullscreenChatOverlay');
-    const toggle = document.getElementById('fullscreenChatToggle');
-    
-    if (overlay && toggle) {
-        overlay.classList.toggle('visible');
-        toggle.classList.toggle('active');
-        
-        // Sync messages from main chat
-        if (overlay.classList.contains('visible')) {
-            syncChatMessages();
-        }
-    }
-}
+
 
 function syncFullscreenChatStatus() {
-    // Sync chat status between main and fullscreen chat
+    // Sync input states between main and fullscreen chat
     const mainStatus = document.getElementById('chatStatus');
-    const fsStatus = document.getElementById('fsChatStatus');
     const mainInput = document.getElementById('chatInput');
     const fsInput = document.getElementById('fsChatInput');
     const fsSendBtn = document.getElementById('fsSendBtn');
     
-    if (mainStatus && fsStatus) {
+    if (mainStatus) {
         // Create observer to watch for status changes
         const observer = new MutationObserver(() => {
-            fsStatus.textContent = mainStatus.textContent;
-            fsStatus.className = mainStatus.className;
-            
             // Sync input states
             if (fsInput && mainInput) {
                 fsInput.disabled = mainInput.disabled;
@@ -278,8 +239,12 @@ function syncFullscreenChatStatus() {
         });
         
         // Initial sync
-        fsStatus.textContent = mainStatus.textContent;
-        fsStatus.className = mainStatus.className;
+        if (fsInput && mainInput) {
+            fsInput.disabled = mainInput.disabled;
+        }
+        if (fsSendBtn && document.getElementById('sendBtn')) {
+            fsSendBtn.disabled = document.getElementById('sendBtn').disabled;
+        }
     }
 }
 
