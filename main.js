@@ -48,7 +48,12 @@ function setup() {
             </div>
         `;
         
+        // Create separate system messages container
+        const systemContainer = document.createElement('div');
+        systemContainer.id = 'fullscreenSystemMessages';
+        
         wrapper.appendChild(overlay);
+        wrapper.appendChild(systemContainer);
     }
 
     // Create particles
@@ -252,9 +257,35 @@ function syncChatMessages() {
     // Copy messages from main chat to fullscreen chat
     const mainMessages = document.getElementById('chatMessages');
     const fsMessages = document.getElementById('fsChatMessages');
+    const systemContainer = document.getElementById('fullscreenSystemMessages');
     
     if (mainMessages && fsMessages) {
-        fsMessages.innerHTML = mainMessages.innerHTML;
+        // Clone the main messages
+        const clone = mainMessages.cloneNode(true);
+        
+        // Extract system messages and move them to separate container
+        const systemMessages = clone.querySelectorAll('.message.system');
+        
+        if (systemContainer && systemMessages.length > 0) {
+            // Only show the latest (last) system message
+            systemContainer.innerHTML = '';
+            systemContainer.classList.add('visible');
+            
+            const lastSystemMsg = systemMessages[systemMessages.length - 1];
+            const content = lastSystemMsg.querySelector('.message-content');
+            if (content) {
+                const systemDiv = document.createElement('div');
+                systemDiv.className = 'system-message';
+                systemDiv.textContent = content.textContent;
+                systemContainer.appendChild(systemDiv);
+            }
+            
+            // Remove all system messages from clone
+            systemMessages.forEach(sysMsg => sysMsg.remove());
+        }
+        
+        // Copy remaining messages (user and bot)
+        fsMessages.innerHTML = clone.innerHTML;
         // Scroll to bottom
         fsMessages.scrollTop = fsMessages.scrollHeight;
     }
