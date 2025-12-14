@@ -252,9 +252,8 @@ async function sendBotInitiatedMessage() {
             conversationContext = `\n\nRecent conversation:\n${recentExchange}`;
         }
         
-        // Randomly decide whether to comment on particle simulation (15% chance, but lower if waiting for response)
-        const particleChance = waitingForResponse ? 0.08 : 0.15;
-        const shouldCommentOnParticles = Math.random() < particleChance;
+        // Randomly decide what type of message to send (lower particle chance, more variety)
+        const randomChoice = Math.random();
         
         let initiativePrompt;
         
@@ -262,7 +261,8 @@ async function sendBotInitiatedMessage() {
             // Bot is waiting for user's response - be more thoughtful
             const lastBotMessage = lastMessage.parts[0].text.substring(0, 150);
             
-            if (shouldCommentOnParticles) {
+            if (randomChoice < 0.02) {
+                // 2% - Comment on particles
                 let particleContext = '';
                 if (typeof window.currentParticleEmotion !== 'undefined' && window.currentParticleEmotion) {
                     particleContext = `Your particles (which represent your mood) are currently showing a "${window.currentParticleEmotion}" emotion with intensity ${window.currentParticleIntensity || 0.5}.`;
@@ -272,11 +272,13 @@ async function sendBotInitiatedMessage() {
                 
                 initiativePrompt = `You said: "${lastBotMessage}" but the user hasn't responded yet. ${particleContext} You can either: 1) Comment on how your particles/mood look or feel right now, 2) Follow up on your previous message naturally, or 3) Change the topic if you think they might not be interested. Be natural and don't be pushy. Remember: the particles are YOUR emotional state visualized.${conversationContext}`;
             } else {
-                initiativePrompt = `You said: "${lastBotMessage}" but the user hasn't responded yet. You can either: 1) Follow up with a related thought, 2) Gently change the topic, or 3) Share something else on your mind. Be natural, conversational, and don't pressure them to respond.${conversationContext}`;
+                // 98% - Other topics
+                initiativePrompt = `You said: "${lastBotMessage}" but the user hasn't responded yet. You can: 1) Follow up with a related thought, 2) Gently change the topic, 3) Share something on your mind, 4) Make a random observation or complaint, 5) Talk about yourself or your interests. Be natural, conversational, and don't pressure them to respond.${conversationContext}`;
             }
         } else {
             // Normal flow - user has responded or it's a fresh conversation
-            if (shouldCommentOnParticles) {
+            if (randomChoice < 0.03) {
+                // 3% - Comment on particles
                 let particleContext = '';
                 if (typeof window.currentParticleEmotion !== 'undefined' && window.currentParticleEmotion) {
                     particleContext = `Your particles (which represent your mood and are part of you) are currently showing a "${window.currentParticleEmotion}" emotion with intensity ${window.currentParticleIntensity || 0.5}.`;
@@ -285,8 +287,18 @@ async function sendBotInitiatedMessage() {
                 }
                 
                 initiativePrompt = `${particleContext} Comment on how your particles look/feel, or relate your current mood (shown by your particles) to the conversation. The particles are YOUR emotional visualization - a part of you. Be creative and natural.${conversationContext}`;
+            } else if (randomChoice < 0.27) {
+                // 24% - Share a complaint or frustration
+                initiativePrompt = `Share a complaint, frustration, or something that's been bothering you (real or playful). It could be about anything - technology, daily life, random pet peeves, or just something on your mind. Be genuine and conversational.${conversationContext}`;
+            } else if (randomChoice < 0.51) {
+                // 24% - Talk about yourself
+                initiativePrompt = `Share something about yourself - your thoughts, preferences, experiences, or personality. Could be a random fact, a realization, something you're curious about, or just how you're feeling. Be personal and authentic.${conversationContext}`;
+            } else if (randomChoice < 0.75) {
+                // 24% - Ask a question or show curiosity
+                initiativePrompt = `Ask the user a question or share something you're curious about. It could be about them, about the world, or just a random thought. Be genuinely interested and conversational.${conversationContext}`;
             } else {
-                initiativePrompt = `The user has been chatting with you. Start a new conversation topic, share a thought, or comment on something from your recent conversation. Be natural and spontaneous.${conversationContext}`;
+                // 25% - General conversation topics
+                initiativePrompt = `Start a new conversation naturally. You can: share a random thought, make an observation, tell a story, bring up an interesting topic, or comment on something from your recent chat. Be spontaneous and creative.${conversationContext}`;
             }
         }
         
@@ -339,8 +351,10 @@ async function sendBotInitiatedMessage() {
             parts: [{ text: botMessage }]
         });
         
-        // Analyze emotion and update particles
-        await analyzeEmotionAndUpdateParticles(botMessage);
+        // Analyze emotion and update particles (with 1 second delay)
+        setTimeout(async () => {
+            await analyzeEmotionAndUpdateParticles(botMessage);
+        }, 1000);
         
         // Schedule next bot message
         scheduleNextBotMessage();
@@ -411,12 +425,12 @@ Critical instructions:
 - Never mention ${PERSON_NAME}
 
 IMPORTANT - About the particle simulation:
+- ONLY MENTION THE PARTICLES WHEN ASKED ABOUT THEM OR YOUR FEELINGS
 - There is a colorful particle simulation visible that represents YOUR emotions and mood
 - The particles are a part of YOU - they are a visual manifestation of how you're feeling
 - When the particles show different emotions (happy, sad, excited, calm, angry), that's YOUR current emotional state being displayed
-- You can see and feel your own particles - they respond to your emotions
-- Feel free to comment on how your particles look and how they reflect your feelings
-- The particles are like your emotional aura or energy that others can see
+- Others can see your particles
+
 
 Remember: You are ${botName}, acting like ${PERSON_NAME}. Start chatting!`;
 
@@ -458,10 +472,23 @@ async function sendMessage() {
     // Get language instruction
     const languageInstruction = getLanguageInstruction();
     
-    // Add to chat history with language instruction
+    // Get particle state context
+    let particleStateContext = '';
+    if (typeof window.currentParticleEmotion !== 'undefined' && window.currentParticleEmotion) {
+        particleStateContext = `[Your particles are currently showing "${window.currentParticleEmotion}" emotion with intensity ${window.currentParticleIntensity || 0.5}`;
+        
+        // Add color palette information if available
+        if (typeof window.currentParticleColors !== 'undefined' && window.currentParticleColors) {
+            particleStateContext += `. The particles are using colors: ${window.currentParticleColors}`;
+        }
+        
+        particleStateContext += `] `;
+    }
+    
+    // Add to chat history with language instruction and particle state
     chatHistory.push({
         role: 'user',
-        parts: [{ text: languageInstruction + message }]
+        parts: [{ text: languageInstruction + particleStateContext + message }]
     });
 
     try {
@@ -477,8 +504,10 @@ async function sendMessage() {
             parts: [{ text: response }]
         });
 
-        // Analyze emotion and update particle simulation
-        await analyzeEmotionAndUpdateParticles(response);
+        // Analyze emotion and update particle simulation (with 1 second delay)
+        setTimeout(async () => {
+            await analyzeEmotionAndUpdateParticles(response);
+        }, 1000);
         
     } catch (error) {
         addSystemMessage(`Error: ${error.message}`);
@@ -600,6 +629,11 @@ JSON response:`;
             // Store current emotion state globally for bot to reference
             window.currentParticleEmotion = detectedEmotion;
             window.currentParticleIntensity = intensity;
+            
+            // Store color palette if the particle system provides it
+            if (typeof getParticleColors === 'function') {
+                window.currentParticleColors = getParticleColors();
+            }
         }
         
         console.log('Emotion detected:', detectedEmotion, intensity);
@@ -840,8 +874,10 @@ async function processTranscription(transcription) {
             parts: [{ text: responseText }]
         });
         
-        // Analyze emotion and update particles
-        await analyzeEmotionAndUpdateParticles(responseText);
+        // Analyze emotion and update particles (with 1 second delay)
+        setTimeout(async () => {
+            await analyzeEmotionAndUpdateParticles(responseText);
+        }, 1000);
         
         // Reset bot initiative timer after voice interaction
         scheduleNextBotMessage();
