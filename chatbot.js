@@ -354,7 +354,7 @@ async function sendBotInitiatedMessage() {
         // Analyze emotion and update particles (with 1 second delay)
         setTimeout(async () => {
             await analyzeEmotionAndUpdateParticles(botMessage);
-        }, 1000);
+        }, 700);
         
         // Schedule next bot message
         scheduleNextBotMessage();
@@ -507,7 +507,7 @@ async function sendMessage() {
         // Analyze emotion and update particle simulation (with 1 second delay)
         setTimeout(async () => {
             await analyzeEmotionAndUpdateParticles(response);
-        }, 1000);
+        }, 700);
         
     } catch (error) {
         addSystemMessage(`Error: ${error.message}`);
@@ -877,7 +877,7 @@ async function processTranscription(transcription) {
         // Analyze emotion and update particles (with 1 second delay)
         setTimeout(async () => {
             await analyzeEmotionAndUpdateParticles(responseText);
-        }, 1000);
+        }, 700);
         
         // Reset bot initiative timer after voice interaction
         scheduleNextBotMessage();
