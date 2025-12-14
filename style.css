@@ -81,7 +81,20 @@ button:active {
     height: auto;
 }
 
-#canvas:fullscreen {
+#fullscreenWrapper {
+    position: relative;
+    width: 100%;
+    display: inline-block;
+}
+
+#fullscreenWrapper:fullscreen {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#fullscreenWrapper:fullscreen #canvas {
     max-width: 100%;
     max-height: 100%;
     width: 100vw;

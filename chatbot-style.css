@@ -347,6 +347,153 @@ button:disabled {
     50% { opacity: 0.7; }
 }
 
+/* Fullscreen Chat Overlay */
+.fullscreen-chat-toggle {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 123, 255, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    font-size: 24px;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-chat-toggle:hover {
+    background: rgba(0, 123, 255, 0.95);
+    transform: scale(1.1);
+}
+
+.fullscreen-chat-toggle.active {
+    background: rgba(220, 53, 69, 0.8);
+}
+
+.fullscreen-chat-toggle.active:hover {
+    background: rgba(220, 53, 69, 0.95);
+}
+
+#fullscreenWrapper:fullscreen .fullscreen-chat-toggle {
+    display: flex !important;
+}
+
+.fullscreen-chat-overlay {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 400px;
+    max-height: calc(100vh - 40px);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 2147483647;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fullscreen-chat-overlay.visible {
+    display: flex !important;
+}
+
+.fullscreen-chat-overlay .chat-header {
+    margin-bottom: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.fullscreen-chat-overlay .chat-header h2 {
+    color: white;
+    font-size: 1.2em;
+}
+
+.fullscreen-chat-overlay .chat-status {
+    background: rgba(212, 237, 218, 0.4);
+    color: white;
+    font-weight: 600;
+}
+
+.fullscreen-chat-overlay .chat-messages {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-height: calc(100vh - 300px);
+    min-height: 300px;
+    color: white;
+}
+
+.fullscreen-chat-overlay .welcome-message {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.fullscreen-chat-overlay .message-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.fullscreen-chat-overlay .message-content.user {
+    background: rgba(0, 123, 255, 0.6);
+    color: white;
+}
+
+.fullscreen-chat-overlay .message-content.bot {
+    background: rgba(108, 117, 125, 0.6);
+    color: white;
+}
+
+.fullscreen-chat-overlay .chat-input-container {
+    margin-bottom: 0;
+}
+
+.fullscreen-chat-overlay #chatInput,
+.fullscreen-chat-overlay .fs-chat-input {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    backdrop-filter: blur(10px);
+}
+
+.fullscreen-chat-overlay #chatInput::placeholder,
+.fullscreen-chat-overlay .fs-chat-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.fullscreen-chat-overlay button {
+    background: rgba(0, 123, 255, 0.7);
+    backdrop-filter: blur(10px);
+}
+
+.fullscreen-chat-overlay button:hover:not(:disabled) {
+    background: rgba(0, 123, 255, 0.9);
+}
+
+.fullscreen-chat-overlay .voice-btn {
+    background: rgba(40, 167, 69, 0.7);
+}
+
+.fullscreen-chat-overlay .voice-btn:hover:not(:disabled) {
+    background: rgba(40, 167, 69, 0.9);
+}
+
+.fullscreen-chat-overlay .lang-btn {
+    background: rgba(108, 117, 125, 0.7);
+}
+
+.fullscreen-chat-overlay .lang-btn:hover:not(:disabled) {
+    background: rgba(108, 117, 125, 0.9);
+}
+
 #sendBtn {
     background: #007bff;
     color: white;

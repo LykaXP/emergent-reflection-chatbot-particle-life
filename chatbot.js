@@ -695,6 +695,9 @@ function addMessage(sender, content, type) {
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Sync to fullscreen chat if it exists
+    syncToFullscreenChat();
 }
 
 function addSystemMessage(content) {
@@ -709,6 +712,18 @@ function addSystemMessage(content) {
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Sync to fullscreen chat if it exists
+    syncToFullscreenChat();
+}
+
+// Sync messages to fullscreen chat overlay
+function syncToFullscreenChat() {
+    const fsMessages = document.getElementById('fsChatMessages');
+    if (fsMessages) {
+        fsMessages.innerHTML = chatMessages.innerHTML;
+        fsMessages.scrollTop = fsMessages.scrollHeight;
+    }
 }
 
 function getLanguageInstruction() {
@@ -723,6 +738,9 @@ function getLanguageInstruction() {
 
 function clearChat() {
     chatMessages.innerHTML = '<div class="welcome-message"><p>Chat cleared. Continue the conversation!</p></div>';
+    
+    // Sync to fullscreen chat
+    syncToFullscreenChat();
     
     // Keep system prompt but clear conversation
     if (chatHistory.length > 2) {

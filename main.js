@@ -28,6 +28,40 @@ function setup() {
     ctx = canvas.getContext('2d');
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
+    
+    // Create fullscreen chat elements and append to wrapper
+    const wrapper = document.getElementById('fullscreenWrapper');
+    if (wrapper) {
+        // Create toggle button
+        const toggle = document.createElement('button');
+        toggle.id = 'fullscreenChatToggle';
+        toggle.className = 'fullscreen-chat-toggle';
+        toggle.title = 'Toggle Chat (C)';
+        toggle.textContent = '💬';
+        
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'fullscreenChatOverlay';
+        overlay.className = 'fullscreen-chat-overlay';
+        overlay.innerHTML = `
+            <div class="chat-header">
+                <h2>Chat</h2>
+                <div class="chat-status" id="fsChatStatus">Not Ready</div>
+            </div>
+            <div class="chat-messages" id="fsChatMessages">
+                <div class="welcome-message">
+                    <p>💬 Chat in fullscreen mode!</p>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <textarea class="fs-chat-input" id="fsChatInput" placeholder="Type your message..." rows="2" disabled></textarea>
+                <button id="fsSendBtn" disabled>Send</button>
+            </div>
+        `;
+        
+        wrapper.appendChild(toggle);
+        wrapper.appendChild(overlay);
+    }
 
     // Create particles
     for (let i = 0; i < numParticles; i++) {
@@ -49,6 +83,24 @@ function setup() {
     document.getElementById('pause').addEventListener('click', togglePause);
     document.getElementById('fullscreen').addEventListener('click', toggleFullscreen);
     
+    // Fullscreen chat handlers
+    const fullscreenChatToggle = document.getElementById('fullscreenChatToggle');
+    const fullscreenChatOverlay = document.getElementById('fullscreenChatOverlay');
+    const fsChatInput = document.getElementById('fsChatInput');
+    const fsSendBtn = document.getElementById('fsSendBtn');
+    
+    fullscreenChatToggle.addEventListener('click', toggleFullscreenChat);
+    fsSendBtn.addEventListener('click', () => sendFullscreenMessage());
+    fsChatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendFullscreenMessage();
+        }
+    });
+    
+    // Sync chat status
+    syncFullscreenChatStatus();
+    
     document.addEventListener('keydown', (e) => {
         // Don't trigger shortcuts when typing in input fields or textareas
         const isTyping = e.target.tagName === 'INPUT' || 
@@ -67,6 +119,9 @@ function setup() {
         } else if (e.key.toLowerCase() === 'f') {
             e.preventDefault();
             toggleFullscreen();
+        } else if (e.key.toLowerCase() === 'c' && document.fullscreenElement) {
+            e.preventDefault();
+            toggleFullscreenChat();
         }
     });
 }
@@ -142,12 +197,123 @@ function togglePause() {
 }
 
 function toggleFullscreen() {
+    const wrapper = document.getElementById('fullscreenWrapper');
     if (!document.fullscreenElement) {
-        canvas.requestFullscreen().catch(err => {
-            console.log(`Error attempting to enable fullscreen: ${err.message}`);
-        });
+        if (wrapper) {
+            wrapper.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        }
     } else {
         document.exitFullscreen();
+    }
+}
+
+// Listen for fullscreen changes
+document.addEventListener('fullscreenchange', () => {
+    const overlay = document.getElementById('fullscreenChatOverlay');
+    const toggle = document.getElementById('fullscreenChatToggle');
+    
+    if (document.fullscreenElement) {
+        // Entered fullscreen - show chat overlay
+        console.log('Entered fullscreen mode');
+        if (overlay) {
+            overlay.classList.add('visible');
+            syncChatMessages();
+        }
+        if (toggle) {
+            toggle.classList.add('active');
+        }
+    } else {
+        // Exited fullscreen - hide chat overlay
+        console.log('Exited fullscreen mode');
+        if (overlay) overlay.classList.remove('visible');
+        if (toggle) toggle.classList.remove('active');
+    }
+});
+
+function toggleFullscreenChat() {
+    const overlay = document.getElementById('fullscreenChatOverlay');
+    const toggle = document.getElementById('fullscreenChatToggle');
+    
+    if (overlay && toggle) {
+        overlay.classList.toggle('visible');
+        toggle.classList.toggle('active');
+        
+        // Sync messages from main chat
+        if (overlay.classList.contains('visible')) {
+            syncChatMessages();
+        }
+    }
+}
+
+function syncFullscreenChatStatus() {
+    // Sync chat status between main and fullscreen chat
+    const mainStatus = document.getElementById('chatStatus');
+    const fsStatus = document.getElementById('fsChatStatus');
+    const mainInput = document.getElementById('chatInput');
+    const fsInput = document.getElementById('fsChatInput');
+    const fsSendBtn = document.getElementById('fsSendBtn');
+    
+    if (mainStatus && fsStatus) {
+        // Create observer to watch for status changes
+        const observer = new MutationObserver(() => {
+            fsStatus.textContent = mainStatus.textContent;
+            fsStatus.className = mainStatus.className;
+            
+            // Sync input states
+            if (fsInput && mainInput) {
+                fsInput.disabled = mainInput.disabled;
+            }
+            if (fsSendBtn && document.getElementById('sendBtn')) {
+                fsSendBtn.disabled = document.getElementById('sendBtn').disabled;
+            }
+        });
+        
+        observer.observe(mainStatus, { 
+            childList: true, 
+            characterData: true, 
+            subtree: true,
+            attributes: true 
+        });
+        
+        // Initial sync
+        fsStatus.textContent = mainStatus.textContent;
+        fsStatus.className = mainStatus.className;
+    }
+}
+
+function syncChatMessages() {
+    // Copy messages from main chat to fullscreen chat
+    const mainMessages = document.getElementById('chatMessages');
+    const fsMessages = document.getElementById('fsChatMessages');
+    
+    if (mainMessages && fsMessages) {
+        fsMessages.innerHTML = mainMessages.innerHTML;
+        // Scroll to bottom
+        fsMessages.scrollTop = fsMessages.scrollHeight;
+    }
+}
+
+function sendFullscreenMessage() {
+    const fsInput = document.getElementById('fsChatInput');
+    const mainInput = document.getElementById('chatInput');
+    const mainSendBtn = document.getElementById('sendBtn');
+    
+    if (fsInput && mainInput && fsInput.value.trim()) {
+        // Copy message to main chat input and trigger send
+        mainInput.value = fsInput.value;
+        fsInput.value = '';
+        
+        // Trigger the main send button click
+        if (mainSendBtn && !mainSendBtn.disabled) {
+            mainSendBtn.click();
+            
+            // Wait a bit then sync messages
+            setTimeout(() => {
+                syncChatMessages();
+            }, 100);
+        }
     }
 }
 
