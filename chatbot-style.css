@@ -436,9 +436,9 @@ button:disabled {
     align-self: flex-end;
 }
 
+/* Hide bot messages from chat overlay flow */
 .fullscreen-chat-overlay .message.bot {
-    align-items: flex-start;
-    align-self: flex-start;
+    display: none !important;
 }
 
 .fullscreen-chat-overlay .message-label {
@@ -492,11 +492,11 @@ button:disabled {
     right: 20px;
     z-index: 2147483648;
     pointer-events: none;
-    display: none;
+    display: none !important;
 }
 
-#fullscreenSystemMessages.visible {
-    display: block;
+#fullscreenWrapper:fullscreen #fullscreenSystemMessages.visible {
+    display: block !important;
 }
 
 #fullscreenSystemMessages .system-message {
@@ -514,7 +514,51 @@ button:disabled {
     pointer-events: auto;
     max-width: 400px;
 }
+/* Separate fullscreen bot message container */
+#fullscreenBotMessages {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2147483647;
+    pointer-events: none;
+    display: none !important;
+    max-width: 600px;
+    width: 90%;
+}
 
+#fullscreenWrapper:fullscreen #fullscreenBotMessages.visible {
+    display: block !important;
+}
+
+#fullscreenBotMessages .bot-message {
+    background: rgba(40, 40, 40, 0.5) !important;
+    backdrop-filter: blur(15px);
+    color: white !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    padding: 20px 28px;
+    border-radius: 16px;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    line-height: 1.6;
+    text-align: center;
+    pointer-events: auto;
+    animation: botSlideIn 0.4s ease-out;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+@keyframes botSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
 @keyframes systemFadeOut {
     0% {
         opacity: 0;

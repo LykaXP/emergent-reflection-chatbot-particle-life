@@ -719,10 +719,16 @@ function addSystemMessage(content) {
 
 // Sync messages to fullscreen chat overlay
 function syncToFullscreenChat() {
-    const fsMessages = document.getElementById('fsChatMessages');
-    if (fsMessages) {
-        fsMessages.innerHTML = chatMessages.innerHTML;
-        fsMessages.scrollTop = fsMessages.scrollHeight;
+    // Call the main.js syncChatMessages function if it exists
+    if (typeof syncChatMessages === 'function') {
+        syncChatMessages();
+    } else {
+        // Fallback to simple sync
+        const fsMessages = document.getElementById('fsChatMessages');
+        if (fsMessages) {
+            fsMessages.innerHTML = chatMessages.innerHTML;
+            fsMessages.scrollTop = fsMessages.scrollHeight;
+        }
     }
 }
 

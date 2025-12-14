@@ -52,8 +52,13 @@ function setup() {
         const systemContainer = document.createElement('div');
         systemContainer.id = 'fullscreenSystemMessages';
         
+        // Create separate bot messages container
+        const botContainer = document.createElement('div');
+        botContainer.id = 'fullscreenBotMessages';
+        
         wrapper.appendChild(overlay);
         wrapper.appendChild(systemContainer);
+        wrapper.appendChild(botContainer);
     }
 
     // Create particles
@@ -209,9 +214,15 @@ document.addEventListener('fullscreenchange', () => {
             syncChatMessages();
         }
     } else {
-        // Exited fullscreen - hide chat overlay
+        // Exited fullscreen - hide chat overlay and message containers
         console.log('Exited fullscreen mode');
         if (overlay) overlay.classList.remove('visible');
+        
+        const systemContainer = document.getElementById('fullscreenSystemMessages');
+        const botContainer = document.getElementById('fullscreenBotMessages');
+        
+        if (systemContainer) systemContainer.classList.remove('visible');
+        if (botContainer) botContainer.classList.remove('visible');
     }
 });
 
@@ -258,6 +269,7 @@ function syncChatMessages() {
     const mainMessages = document.getElementById('chatMessages');
     const fsMessages = document.getElementById('fsChatMessages');
     const systemContainer = document.getElementById('fullscreenSystemMessages');
+    const botContainer = document.getElementById('fullscreenBotMessages');
     
     if (mainMessages && fsMessages) {
         // Clone the main messages
@@ -284,11 +296,75 @@ function syncChatMessages() {
             systemMessages.forEach(sysMsg => sysMsg.remove());
         }
         
-        // Copy remaining messages (user and bot)
+        // Extract bot messages and move them to center container
+        const botMessages = clone.querySelectorAll('.message.bot');
+        
+        if (botContainer && botMessages.length > 0) {
+            const lastBotMsg = botMessages[botMessages.length - 1];
+            const content = lastBotMsg.querySelector('.message-content');
+            
+            // Only update if content has changed
+            if (content) {
+                const currentBotMsg = botContainer.querySelector('.bot-message');
+                const newContent = content.textContent;
+                
+                if (!currentBotMsg || currentBotMsg.textContent !== newContent) {
+                    // Only update when there's a new or different message
+                    botContainer.innerHTML = '';
+                    botContainer.classList.add('visible');
+                    
+                    const botDiv = document.createElement('div');
+                    botDiv.className = 'bot-message';
+                    botContainer.appendChild(botDiv);
+                    
+                    // Type out the message word by word
+                    typeMessage(botDiv, newContent);
+                }
+            }
+            
+            // Remove all bot messages from clone
+            botMessages.forEach(botMsg => botMsg.remove());
+        }
+        
+        // Copy remaining messages (user only)
         fsMessages.innerHTML = clone.innerHTML;
         // Scroll to bottom
         fsMessages.scrollTop = fsMessages.scrollHeight;
     }
+}
+
+function typeMessage(element, text) {
+    // Split text into words
+    const words = text.split(' ');
+    let currentIndex = 0;
+    
+    // Clear any existing content
+    element.textContent = '';
+    
+    function typeNextWord() {
+        if (currentIndex < words.length) {
+            const word = words[currentIndex];
+            element.textContent += (currentIndex > 0 ? ' ' : '') + word;
+            currentIndex++;
+            
+            // Calculate natural delay based on word length and punctuation
+            let delay = 60 + Math.random() * 40; // Base: 60-100ms
+            
+            // Longer words take slightly more time
+            delay += word.length * 8;
+            
+            // Add pauses after punctuation
+            if (word.endsWith('.') || word.endsWith('!') || word.endsWith('?')) {
+                delay += 300; // Pause after sentence
+            } else if (word.endsWith(',') || word.endsWith(';') || word.endsWith(':')) {
+                delay += 150; // Shorter pause after clause
+            }
+            
+            setTimeout(typeNextWord, delay);
+        }
+    }
+    
+    typeNextWord();
 }
 
 function sendFullscreenMessage() {
