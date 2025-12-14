@@ -4,19 +4,19 @@ An interactive AI chatbot application that visualizes the bot's emotional state 
 
 ## Features
 
-### 🤖 AI Personality Training
+### AI Personality Training
 - Upload conversation files to train the chatbot's personality
 - Supports multiple conversation formats (Name: Message, [Name] Message, JSON)
 - Automatically generates a unique name for the bot based on personality analysis
 - Uses Google's Gemini API for advanced natural language processing
 
-### 🎨 Emotional Particle Visualization
+### Emotional Particle Visualization
 - Real-time particle simulation that reflects the bot's emotional state
 - Emotions detected: happy, sad, angry, excited, calm, neutral
 - Dynamic color palettes and movement patterns based on emotion intensity
 - Visual representation helps users understand the bot's mood
 
-### 💬 Advanced Chat Features
+### Advanced Chat Features
 - **Multi-language support**: English, French, Traditional Chinese, Japanese
 - **Voice input**: Speech-to-text functionality
 - **Bot initiative**: Chatbot proactively starts conversations after periods of inactivity
@@ -138,7 +138,7 @@ Emotions are detected using a hybrid approach:
 
 ## Browser Compatibility
 
-- ✅ Chrome/Edge (Recommended)
+- Chrome/Edge (Recommended)
 
 ## Privacy & Security
 
