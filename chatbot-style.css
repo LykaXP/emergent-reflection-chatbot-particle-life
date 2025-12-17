@@ -628,11 +628,11 @@ button:disabled {
 }
 
 .fullscreen-chat-overlay .voice-btn {
-    background: rgba(40, 167, 69, 0.7);
+    background: rgba(40, 167, 69, 0.3);
 }
 
 .fullscreen-chat-overlay .voice-btn:hover:not(:disabled) {
-    background: rgba(40, 167, 69, 0.9);
+    background: rgba(40, 167, 69, 0.5);
 }
 
 .fullscreen-chat-overlay .voice-btn.recording {
