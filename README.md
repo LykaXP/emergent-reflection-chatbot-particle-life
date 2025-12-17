@@ -1,4 +1,4 @@
-# Chatbot Particle Life
+# Emergent Reflection
 
 An interactive AI chatbot application that visualizes the bot's emotional state through a dynamic particle simulation. The chatbot learns personality traits from uploaded conversation files and engages in natural conversations while displaying its emotions through colorful animated particles.
 
